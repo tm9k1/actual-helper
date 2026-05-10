@@ -1,0 +1,39 @@
+# Actual Budget webhook bridge — build from this repository.
+# See DEPLOY.md for registry-only deploy (prebuilt image) and all options.
+#
+# Quick start: copy .env.example → .env, then:
+#   docker compose up -d --build
+
+name: ${COMPOSE_PROJECT_NAME:-actual-helper}
+
+services:
+  actual-helper:
+    container_name: ${ACTUAL_HELPER_CONTAINER_NAME:-actual-helper}
+    restart: unless-stopped
+    build:
+      context: ${ACTUAL_HELPER_BUILD_CONTEXT:-.}
+      dockerfile: ${ACTUAL_HELPER_DOCKERFILE:-Dockerfile}
+    image: ${ACTUAL_HELPER_IMAGE_REF:-actual-helper:local}
+    ports:
+      - "${ACTUAL_HELPER_PUBLISH_PORT:-3847}:${PORT:-3847}"
+    env_file:
+      - .env
+    environment:
+      ACTUAL_DATA_DIR: /data
+    volumes:
+      - data:/data
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://127.0.0.1:'+(process.env.PORT||3847)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+
+volumes:
+  data:
+    name: ${ACTUAL_HELPER_VOLUME:-actual_helper_data}
