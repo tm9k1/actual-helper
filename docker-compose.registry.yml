@@ -1,0 +1,38 @@
+# Same runtime as docker-compose.yml but uses a prebuilt image only (no build).
+# Copy .env.example → .env and set ACTUAL_HELPER_IMAGE_REF, then:
+#
+#   docker compose -f docker-compose.registry.yml up -d
+#
+# Pull a published image first, e.g.:
+#   docker pull ghcr.io/YOUR_LOGIN/actual-helper:v1.0.0
+
+name: ${COMPOSE_PROJECT_NAME:-actual-helper}
+
+services:
+  actual-helper:
+    container_name: ${ACTUAL_HELPER_CONTAINER_NAME:-actual-helper}
+    restart: unless-stopped
+    image: ${ACTUAL_HELPER_IMAGE_REF}
+    ports:
+      - "${ACTUAL_HELPER_PUBLISH_PORT:-3847}:${PORT:-3847}"
+    env_file:
+      - .env
+    environment:
+      ACTUAL_DATA_DIR: /data
+    volumes:
+      - data:/data
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://127.0.0.1:'+(process.env.PORT||3847)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+
+volumes:
+  data:
+    name: ${ACTUAL_HELPER_VOLUME:-actual_helper_data}

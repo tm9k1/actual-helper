@@ -1,0 +1,20 @@
+{
+  "name": "actual-helper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "build": "node scripts/build.mjs",
+    "test": "node --test",
+    "print-budget-ids": "node --env-file=.env scripts/print-budget-ids.mjs",
+    "clear-cache": "node --env-file=.env scripts/clear-local-cache.mjs"
+  },
+  "dependencies": {
+    "@actual-app/api": "^26.5.2",
+    "express": "^5.1.0"
+  }
+}
